@@ -1,0 +1,124 @@
+		Web-CVS-Tools
+	    --------------------
+		 Version 1.0
+
+Copyright (C) 2008,2009 Alex Amiryan
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+Intro
+-----
+This program is a tool for web developers to automate and make their development
+easier with CVS (Concurrent Versions System, http://www.nongnu.org/cvs/).
+
+Description of the workflow
+---------------------------
+Every developer has its own work directory which is located on the development server. 
+Let’s put them in /home. So for example developer Mike has /home/mike and if he 
+developing project which called mysite then it will be located on /home/mike/mysite.
+Development server has to have apache and bind(DNS server) configured to allow 
+developers to work and test their work. Every project has to have its own first level 
+domain on developer server. Every user has to have it’s own subdomain on every project. 
+So we have domain http://mysite and Mike can access his copy of mysite at http://mike.mysite .
+Also we need special domain for testing joined stable version of the site. Let’s call it 
+http://test and we can access current stable version of mysite at http://mysite.test . 
+This files can be located in /home/test .
+Our online server has to have 2 CVS copies of the site and one clean copy (without CVS 
+folders) which will serve online site. Let’s put CVS copies in /home/mysite_test and 
+/home/mysite_dev. Online site will be in /home/mysite. If online site’s address is 
+http://www.mysite.com then we have to also have http://dev.mysite.com and 
+http://test.mysite.com .
+
+Start of a project
+
+Project manager creates new CVS repository and new module. Let’s call it mysite. Then 
+he tags whole project with tag which called mysite-stable-current.
+
+  cvs -q rtag -F -r HEAD mysite-stable-current mysite
+
+Start making new job on project
+
+When developper with name is Mike want to start making new job on the project he creates 
+a new branch with name mysite-mike-job1 from tag mysite-current-stable and starts to work on it.
+
+  cvs -q rtag -B -b -F -r mysite-stable-current mysite-mike-job1 mysite
+
+While developing
+
+While developing developer may want to test his work on online server, but without joining it to 
+main branch. In that case he have to commit his current files and execute following command from 
+server in /home/mysite_dev.
+  
+  cvs -q update -d -r mysite-mike-job1
+
+Then he can test his unstable code on http://dev.mysite.com
+
+When job is finished
+
+When developer finishes and tested his job he needs commit all his files. After that project 
+manager have to join the changes of the developer to the main branch. So he executes following commands:
+
+mkdir /tmp/jkh23bhlh234
+cd /tmp/jkh23bhlh234
+cvs -q checkout -r mysite-mike-job1 mysite
+cd mysite
+cvs -q update -d -j mysite-stable-current
+cvs -q commit -m "Updated with latest stable"
+cd /home/manager/mysite
+cvs -q update -d -j mysite-mike-job1
+cvs -q commit -m "joined mysite-mike-job1"
+
+Then we have to tag this branch as merged
+  
+  cvs -q rtag -F -r mysite-mike-job1 mysite-mike-job1-merged mysite
+
+To have history of stable versions we have to make additional tag in format mysite-stable-YEAR-MONTH-DAY_HOUR-MINUTE-SECOND
+
+  cvs -q rtag -r HEAD mysite-stable-108-7-1_6-40-21 mysite
+
+Then we tag our joined version as mysite-stable-current
+
+  cvs -q rtag -F -r HEAD mysite-stable-current mysite
+
+Uploading to online server
+
+To upload last stable version to server we need to execute following command in online server’s 
+/home/mysite_test directory
+
+  cvs -q update -d -r mysite-stable-current
+
+Then we can make final test of the site on http://test.mysite.com before putting it online. 
+When we finished testing and code is ready to become online we just need to execute following 
+command to copy site from test to online:
+
+  /bin/cp -aT /home/mysite_test /home/mysite
+  find /home/mysite -name CVS -prune -exec rm -rf {} \\;
+  find /home/mysite -name .cvsignore -prune -exec rm -rf {} \\;
+
+Explanation of every script
+---------------------------
+
+dev_server
+
+work_config_global.pl – Global configuration for developers work script. There is defined list of the project and list of the developers.
+work.pl – Main script for developers. It must NOT be called directly, it must be included by the dev_username/work.pl scripts.
+dev_username/config.pl – Configuration for each developer.
+dev_username/work.pl – Script that developer should call to get his work interface.
+manager/merge.pl – Script for project manager to merge developer’s work to main branch.
+
+online_server
+
+update_config.pl – Configuration for online server. There is array of sites where you must specify the directories of the dev, test main sites. Also there is array of developers and of course address of the CVSROOT.
+update.pl – Main script for uploading last stable version. Must be called directly.
