@@ -1,4 +1,0 @@
-AuthType Basic
-require valid-user
-AuthUserFile /var/www/.htpasswd
-AuthName "Work"

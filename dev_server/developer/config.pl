@@ -1,7 +1,6 @@
-#!/usr/bin/perl
 #
-# work.pl - Developer's script
-# Copyright (C) 2008 Alex Amiryan
+# config.pl - developer's local config file
+# Copyright (C) 2008,2009 Alex Amiryan
 #
 # This file is part of Web-CVS-Tools
 #
@@ -19,7 +18,11 @@
 # along with this program; if not, see <http://www.gnu.org/licenses/>.
 #
 
-use CGI qw/:standard/;
+# Work dir on dev server
+$WORK_DIR='/home/joe/';
 
-require ("config.pl");
-require ("../work.pl");
+# Username of the developer
+$user='joe';
+
+# CVSROOT
+$ENV{'CVSROOT'} = '/www/cvs';

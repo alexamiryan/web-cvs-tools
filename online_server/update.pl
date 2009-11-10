@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 #
 # update.pl - update online server with latest version
-# Copyright (C) 2008 Alex Amiryan
+# Copyright (C) 2008,2009 Alex Amiryan
 #
 # This file is part of Web-CVS-Tools
 #
